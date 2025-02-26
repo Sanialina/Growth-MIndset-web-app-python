@@ -45,19 +45,31 @@ if uploaded_file:
         df = df.drop_duplicates()
         st.success("✅ Duplicates removed!")
 
-    missing_value_option = st.sidebar.radio(
-        "Handle Missing Values",
-        ["Do Nothing", "Fill with Mean", "Fill with Median", "Fill with 0", "Fill with 'Missing'"]
-    )
+    # ---- Per-Column Missing Value Handling ----
+    st.sidebar.subheader("📝 Handle Missing Values Per Column")
     
-    if missing_value_option == "Fill with Mean":
-        df.fillna(df.mean(), inplace=True)
-    elif missing_value_option == "Fill with Median":
-        df.fillna(df.median(), inplace=True)
-    elif missing_value_option == "Fill with 0":
-        df.fillna(0, inplace=True)
-    elif missing_value_option == "Fill with 'Missing'":
-        df.fillna("Missing", inplace=True)
+    missing_cols = df.columns[df.isnull().any()].tolist()  # Find columns with missing values
+    fill_methods = {}
+
+    for col in missing_cols:
+        fill_methods[col] = st.sidebar.selectbox(
+            f"Fill missing values in {col}",
+            ["Do Nothing", "Fill with Mean", "Fill with Median", "Fill with Mode", "Fill with 0", "Fill with 'Missing'"],
+            key=col
+        )
+
+    # Apply missing value handling per column
+    for col, method in fill_methods.items():
+        if method == "Fill with Mean":
+            df[col].fillna(df[col].mean(), inplace=True)
+        elif method == "Fill with Median":
+            df[col].fillna(df[col].median(), inplace=True)
+        elif method == "Fill with Mode":
+            df[col].fillna(df[col].mode()[0], inplace=True)
+        elif method == "Fill with 0":
+            df[col].fillna(0, inplace=True)
+        elif method == "Fill with 'Missing'":
+            df[col].fillna("Missing", inplace=True)
 
     # ---- Data Organization ----
     st.sidebar.subheader("🛠 Organize Data")
